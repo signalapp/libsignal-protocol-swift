@@ -12,10 +12,10 @@ class SenderKeyDistributionMessage {
         return handle
     }
 
-    init(name: SenderKeyName, store: SenderKeyStore, ctx: UnsafeMutableRawPointer?) throws {
-        try withSenderKeyStore(store) {
+    init<Store: SenderKeyStore>(name: SenderKeyName, store: Store, ctx: Store.Context) throws {
+        try store.withFfiStore(context: ctx) {
             try CheckError(signal_create_sender_key_distribution_message(&handle, name.nativeHandle(),
-                                                                         $0, ctx))
+                                                                         $0, $1))
         }
     }
 

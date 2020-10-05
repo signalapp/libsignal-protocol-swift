@@ -1,5 +1,7 @@
 
 class InMemorySignalProtocolStore : IdentityKeyStore, PreKeyStore, SignedPreKeyStore, SessionStore, SenderKeyStore {
+    typealias Context = Void
+
     private var public_keys : [ProtocolAddress : IdentityKey] = [:]
     private var private_key : IdentityKeyPair;
     private var device_id : UInt32;
@@ -77,10 +79,10 @@ class InMemorySignalProtocolStore : IdentityKeyStore, PreKeyStore, SignedPreKeyS
         session_map[address] = record;
     }
 
-    func storeSenderKey(name: SenderKeyName, record: SenderKeyRecord, ctx: UnsafeMutableRawPointer?) throws {
+    func storeSenderKey(name: SenderKeyName, record: SenderKeyRecord, ctx: Void) throws {
         sender_key_map[name] = record
     }
-    func loadSenderKey(name: SenderKeyName, ctx: UnsafeMutableRawPointer?) throws -> SenderKeyRecord? {
+    func loadSenderKey(name: SenderKeyName, ctx: Void) throws -> SenderKeyRecord? {
         return sender_key_map[name]
     }
 }

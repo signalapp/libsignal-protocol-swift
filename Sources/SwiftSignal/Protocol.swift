@@ -97,35 +97,35 @@ func ProcessPreKeyBundle(bundle: PreKeyBundle,
     }
 }
 
-func GroupEncrypt(group_id: SenderKeyName,
-                  message: [UInt8],
-                  store: SenderKeyStore,
-                  ctx: UnsafeMutableRawPointer?) throws -> [UInt8] {
-    return try withSenderKeyStore(store) { ffiStore in
+func GroupEncrypt<Store: SenderKeyStore>(group_id: SenderKeyName,
+                                         message: [UInt8],
+                                         store: Store,
+                                         ctx: Store.Context) throws -> [UInt8] {
+    return try store.withFfiStore(context: ctx) { ffiStore, ctxPtr in
         return try invokeFnReturningArray {
-            signal_group_encrypt_message($0, $1, group_id.nativeHandle(), message, message.count, ffiStore, ctx)
+            signal_group_encrypt_message($0, $1, group_id.nativeHandle(), message, message.count, ffiStore, ctxPtr)
         }
     }
 }
 
-func GroupDecrypt(group_id: SenderKeyName,
-                  message: [UInt8],
-                  store: SenderKeyStore,
-                  ctx: UnsafeMutableRawPointer?) throws -> [UInt8] {
-    return try withSenderKeyStore(store) { ffiStore in
+func GroupDecrypt<Store: SenderKeyStore>(group_id: SenderKeyName,
+                                         message: [UInt8],
+                                         store: Store,
+                                         ctx: Store.Context) throws -> [UInt8] {
+    return try store.withFfiStore(context: ctx) { ffiStore, ctxPtr in
         return try invokeFnReturningArray {
-            signal_group_decrypt_message($0, $1, group_id.nativeHandle(), message, message.count, ffiStore, ctx)
+            signal_group_decrypt_message($0, $1, group_id.nativeHandle(), message, message.count, ffiStore, ctxPtr)
         }
     }
 }
 
-func ProcessSenderKeyDistributionMessage(sender_name: SenderKeyName,
-                                         msg: SenderKeyDistributionMessage,
-                                         store: SenderKeyStore,
-                                         ctx: UnsafeMutableRawPointer?) throws {
-    try withSenderKeyStore(store) {
+func ProcessSenderKeyDistributionMessage<Store: SenderKeyStore>(sender_name: SenderKeyName,
+                                                                msg: SenderKeyDistributionMessage,
+                                                                store: Store,
+                                                                ctx: Store.Context) throws {
+    try store.withFfiStore(context: ctx) {
         try CheckError(signal_process_sender_key_distribution_message(sender_name.nativeHandle(),
                                                                       msg.nativeHandle(),
-                                                                      $0, ctx))
+                                                                      $0, $1))
     }
 }

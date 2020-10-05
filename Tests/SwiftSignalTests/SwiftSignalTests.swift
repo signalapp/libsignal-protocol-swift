@@ -185,20 +185,20 @@ class SwiftSignalTests: XCTestCase {
 
         let a_store = try! InMemorySignalProtocolStore()
 
-        let skdm = try! SenderKeyDistributionMessage(name: group_id, store: a_store, ctx: nil)
+        let skdm = try! SenderKeyDistributionMessage(name: group_id, store: a_store, ctx: ())
 
         let skdm_bits = try! skdm.serialize()
 
         let skdm_r = try! SenderKeyDistributionMessage(bytes: skdm_bits)
 
-        let a_ctext = try! GroupEncrypt(group_id: group_id, message: [1,2,3], store: a_store, ctx: nil)
+        let a_ctext = try! GroupEncrypt(group_id: group_id, message: [1,2,3], store: a_store, ctx: ())
 
         let b_store = try! InMemorySignalProtocolStore()
         try! ProcessSenderKeyDistributionMessage(sender_name: group_id,
                                                  msg: skdm_r,
                                                  store: b_store,
-                                                 ctx: nil)
-        let b_ptext = try! GroupDecrypt(group_id: group_id, message: a_ctext, store: b_store, ctx: nil)
+                                                 ctx: ())
+        let b_ptext = try! GroupDecrypt(group_id: group_id, message: a_ctext, store: b_store, ctx: ())
 
         XCTAssertEqual(b_ptext, [1,2,3])
     }

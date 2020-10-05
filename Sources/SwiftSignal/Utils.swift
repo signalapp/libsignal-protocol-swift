@@ -306,18 +306,19 @@ func withSessionStore<Result>(_ store: SessionStore, _ body: (UnsafePointer<Sign
     }
 }
 
-func withSenderKeyStore<Result>(_ store: SenderKeyStore, _ body: (UnsafePointer<SignalSenderKeyStore>) throws -> Result) rethrows -> Result {
+extension SenderKeyStore {
+func withFfiStore<Result>(context: Context, _ body: (UnsafePointer<SignalSenderKeyStore>, UnsafeMutableRawPointer) throws -> Result) rethrows -> Result {
     func ffiShimStoreSenderKey(store_ctx: UnsafeMutableRawPointer?,
                                sender_name: OpaquePointer?,
                                record: OpaquePointer?,
                                ctx: UnsafeMutableRawPointer?) -> Int32 {
         do {
-            let store = store_ctx!.assumingMemoryBound(to: SenderKeyStore.self).pointee
+            let store = store_ctx!.assumingMemoryBound(to: AnySenderKeyStore.self).pointee
             var sender_name = SenderKeyName(unowned: sender_name)
             defer { cloneOrForgetAsNeeded(&sender_name) }
             var record = SenderKeyRecord(unowned: record)
             defer { cloneOrForgetAsNeeded(&record) }
-            try store.storeSenderKey(name: sender_name, record: record, ctx: ctx)
+            try store._storeSenderKey(name: sender_name, record: record, ctx: ctx)
             return 0
         }
         catch {
@@ -330,10 +331,10 @@ func withSenderKeyStore<Result>(_ store: SenderKeyStore, _ body: (UnsafePointer<
                               sender_name: OpaquePointer?,
                               ctx: UnsafeMutableRawPointer?) -> Int32 {
         do {
-            let store = store_ctx!.assumingMemoryBound(to: SenderKeyStore.self).pointee
+            let store = store_ctx!.assumingMemoryBound(to: AnySenderKeyStore.self).pointee
             var sender_name = SenderKeyName(unowned: sender_name)
             defer { cloneOrForgetAsNeeded(&sender_name) }
-            if var record = try store.loadSenderKey(name: sender_name, ctx: ctx) {
+            if var record = try store._loadSenderKey(name: sender_name, ctx: ctx) {
                 recordp!.pointee = try cloneOrTakeHandle(from: &record)
             } else {
                 recordp!.pointee = nil
@@ -345,13 +346,16 @@ func withSenderKeyStore<Result>(_ store: SenderKeyStore, _ body: (UnsafePointer<
         }
     }
 
-    return try withUnsafePointer(to: store) {
+    return try withUnsafePointer(to: self as AnySenderKeyStore) {
         // We're not actually going to mutate through 'ffiStore.ctx';
         // it's just the usual convention of `void *` for context fields.
         var ffiStore = SignalSenderKeyStore(
             ctx: UnsafeMutableRawPointer(mutating: $0),
             load_sender_key: ffiShimLoadSenderKey,
             store_sender_key: ffiShimStoreSenderKey)
-        return try body(&ffiStore)
+        return try withUnsafePointer(to: context) {
+            try body(&ffiStore, UnsafeMutableRawPointer(mutating: $0))
+        }
     }
+}
 }
