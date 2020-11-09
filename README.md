@@ -1,8 +1,6 @@
 # Overview
 
-libsignal-protocol-swift is a Swift binding to libsignal-protocol-rust via libsignal-ffi
-
-Work in progress.  Subject to change without notice, use outside Signal not yet recommended.
+**This repository has been folded into [libsignal-client](https://github.com/signalapp/libsignal-client).**
 
 # Legal things
 ## Cryptography Notice
